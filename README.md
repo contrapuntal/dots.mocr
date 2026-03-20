@@ -545,7 +545,7 @@ cd dots.mocr
 pip install -e .
 ```
 
-If you have trouble with the installation, try our [Docker Image](https://hub.docker.com/r/rednotehilab/dots.ocr) for an easier setup, and follow these steps:
+If you have trouble with the installation, we recommend to use vLLM inference. Try official vLLM [Docker Image](https://hub.docker.com/layers/vllm/vllm-openai/v0.17.1-cu130/images/sha256-ec9b626d16b2af377662d9d31c1784aac5174b571450a1e25ffd90ddb639f2d2) for an easier setup, and follow these steps:
 
 
 ### Download Model Weights
@@ -560,15 +560,15 @@ python3 tools/download_model.py --type modelscope
 
 ## 2. Deployment
 ### vLLM inference
-We highly recommend using vLLM for deployment and inference. **Since vLLM version 0.11.0, Dots OCR has been officially integrated into vLLM with verified performance** and you can use vLLM docker image directly (e.g, `vllm/vllm-openai:v0.11.0`) to deploy the model server.
+We highly recommend using vLLM for deployment and inference. **Since vLLM version 0.11.0, Dots OCR has been officially integrated into vLLM with verified performance** and you can use vLLM docker image directly (e.g, `vllm/vllm-openai:v0.17.1`) to deploy the model server.
 
 ```shell
 # Launch vLLM model server
 ## dots.mocr
-CUDA_VISIBLE_DEVICES=0 vllm serve rednote-hilab/dots.mocr --tensor-parallel-size 1 --gpu-memory-utilization 0.9 --chat-template-content-format string --served-model-name model --trust-remote-code
+CUDA_VISIBLE_DEVICES=0 vllm serve rednote-hilab/dots.mocr --tensor-parallel-size 1 --gpu-memory-utilization 0.9 --chat-template-content-format string --trust-remote-code
 
 ## dots.mocr-svg
-CUDA_VISIBLE_DEVICES=0 vllm serve rednote-hilab/dots.mocr-svg --tensor-parallel-size 1 --gpu-memory-utilization 0.9 --chat-template-content-format string --served-model-name model --trust-remote-code
+CUDA_VISIBLE_DEVICES=0 vllm serve rednote-hilab/dots.mocr-svg --tensor-parallel-size 1 --gpu-memory-utilization 0.9 --chat-template-content-format string --trust-remote-code
 
 # vLLM API Demo
 # See dots_mocr/model/inference.py and dots_mocr/utils/prompts.py for details on parameter and prompt settings 
