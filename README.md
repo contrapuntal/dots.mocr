@@ -1,3 +1,52 @@
+# Fork: Apple Silicon Support
+
+This fork adds native Apple Silicon inference via **MLX** (recommended) and **PyTorch MPS** (fallback). No CUDA required.
+
+## MLX Inference (Recommended)
+
+**85 tok/s** on M4 Max. 5x faster than PyTorch MPS. Handles 8M+ pixel images without OOM.
+
+### Setup
+
+```bash
+# 1. Download model weights (from repo root)
+python3 tools/download_model.py
+
+# 2. Set up MLX environment
+cd mlx
+uv venv --python 3.12 .venv && source .venv/bin/activate
+uv pip install torch torchvision transformers==4.51.0 mlx mlx-lm qwen-vl-utils accelerate Pillow numpy safetensors
+
+# 3. Convert text backbone (one-time, generates mlx_text_model/)
+python3 convert_text.py
+
+# 4. Run inference
+DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 inference_mlx.py --image ../demo/demo_image1.jpg
+```
+
+### Performance (M4 Max, 128GB)
+
+| Metric | PyTorch MPS | MLX |
+|--------|------------|-----|
+| Text generation | 15-20 tok/s | **72-88 tok/s** (5x) |
+| Vision encoder (4M px) | ~130s | **16s** (8x) |
+| Max pixels before OOM | 4M | **8M+** |
+
+## PyTorch MPS Fallback
+
+If you prefer PyTorch without MLX dependencies:
+
+```bash
+source .venv/bin/activate
+DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 demo/demo_mps.py
+```
+
+See [CLAUDE.md](CLAUDE.md) for full implementation details, limitations, and test results.
+
+---
+
+*Original upstream README follows:*
+
 <div align="left">
 
 <h1 align="left">
