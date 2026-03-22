@@ -64,9 +64,9 @@ All 8 prompt modes smoke-tested via `demo/test_all_modes_mps.py` (SDPA + fp16, m
 Pure MLX inference is **5-6x faster** than PyTorch MPS and handles **8M+ pixel images** without OOM.
 
 ```bash
-cd ../dots.mocr-mlx
-source .venv/bin/activate
-DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 inference_mlx.py --image ../dots.mocr/demo/demo_image1.jpg
+cd mlx
+source .venv/bin/activate  # separate venv with mlx dependencies
+DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 inference_mlx.py --image ../demo/demo_image1.jpg
 ```
 
 ### MLX architecture
@@ -80,7 +80,7 @@ Image preprocessing still uses the PyTorch `Qwen2VLImageProcessor` (CPU-only, no
 
 ### MLX setup
 
-Located at `../dots.mocr-mlx/` with its own `uv venv`:
+Located at `mlx/` with its own `uv venv` (separate from the PyTorch `.venv/`):
 - `vision_tower.py` — MLX vision tower (304 weights, validated cos_sim=1.0 vs PyTorch)
 - `inference_mlx.py` — end-to-end inference script
 - `mlx_text_model/` — converted Qwen2 text backbone (3.3GB, bfloat16)

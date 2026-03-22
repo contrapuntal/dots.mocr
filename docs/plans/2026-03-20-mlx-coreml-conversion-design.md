@@ -21,7 +21,7 @@ Try FL33TW00D's CoreML+MLX approach first, adapted for dots.mocr. If CoreML conv
 
 ## Project Setup
 
-**New project directory**: `/Volumes/MacExternalStorage/models/ocr/dots.mocr-mlx/` with its own `uv venv`. Keeps the working PyTorch setup untouched as a fallback.
+**Project directory**: `mlx/` subdirectory within the dots.mocr repo, with its own `uv venv`. Keeps the PyTorch setup in the root `.venv/` untouched as a fallback.
 
 **Dependencies** (separate venv):
 - `torch==2.7.0` (match FL33TW00D's tested version for CoreML tracing)
