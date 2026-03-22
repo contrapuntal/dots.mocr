@@ -1,0 +1,81 @@
+"""
+Extract text-only weights from dots.mocr and prepare for mlx-lm conversion.
+Strips vision_tower weights and creates a qwen2-compatible config.
+"""
+import json
+import os
+import shutil
+from safetensors.torch import load_file, save_file
+
+WEIGHTS_DIR = "../weights/DotsMOCR"
+OUTPUT_DIR = "./text_backbone"
+
+
+def main():
+    # 1. Load and adapt config
+    with open(os.path.join(WEIGHTS_DIR, "config.json")) as f:
+        config = json.load(f)
+
+    # Remove vision-specific fields
+    config.pop("vision_config", None)
+    config.pop("image_token_id", None)
+    config.pop("video_token_id", None)
+    config.pop("auto_map", None)
+
+    # Remap to qwen2 so mlx-lm recognizes it
+    config["model_type"] = "qwen2"
+    config["architectures"] = ["Qwen2ForCausalLM"]
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(os.path.join(OUTPUT_DIR, "config.json"), "w") as f:
+        json.dump(config, f, indent=2)
+    print(f"Config written to {OUTPUT_DIR}/config.json")
+
+    # 2. Filter and merge safetensors (strip vision_tower.* weights)
+    index_path = os.path.join(WEIGHTS_DIR, "model.safetensors.index.json")
+    with open(index_path) as f:
+        index = json.load(f)
+
+    # Collect all shard files
+    shard_files = sorted(set(index["weight_map"].values()))
+    print(f"Loading {len(shard_files)} shards...")
+
+    text_weights = {}
+    vision_count = 0
+    for shard in shard_files:
+        shard_path = os.path.join(WEIGHTS_DIR, shard)
+        weights = load_file(shard_path)
+        for key, tensor in weights.items():
+            if key.startswith("vision_tower."):
+                vision_count += 1
+                continue
+            text_weights[key] = tensor
+
+    print(f"Kept {len(text_weights)} text tensors, removed {vision_count} vision tensors")
+
+    # 3. Save as single shard
+    output_shard = os.path.join(OUTPUT_DIR, "model.safetensors")
+    save_file(text_weights, output_shard)
+
+    # Create index
+    new_index = {
+        "metadata": {"total_size": sum(t.nelement() * t.element_size() for t in text_weights.values())},
+        "weight_map": {k: "model.safetensors" for k in text_weights},
+    }
+    with open(os.path.join(OUTPUT_DIR, "model.safetensors.index.json"), "w") as f:
+        json.dump(new_index, f, indent=2)
+
+    # 4. Copy tokenizer files
+    for fname in ["tokenizer.json", "tokenizer_config.json", "special_tokens_map.json",
+                   "merges.txt", "vocab.json", "generation_config.json"]:
+        src = os.path.join(WEIGHTS_DIR, fname)
+        if os.path.exists(src):
+            shutil.copy2(src, os.path.join(OUTPUT_DIR, fname))
+
+    print(f"Text backbone ready at {OUTPUT_DIR}/")
+    total_mb = os.path.getsize(output_shard) / 1e6
+    print(f"Model size: {total_mb:.0f} MB")
+
+
+if __name__ == "__main__":
+    main()
