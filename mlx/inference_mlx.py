@@ -142,7 +142,7 @@ def generate_with_embeddings(text_model, tokenizer, input_embeddings, input_ids,
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image", default="../dots.mocr/demo/demo_image1.jpg")
+    parser.add_argument("--image", default="../demo/demo_image1.jpg")
     parser.add_argument("--prompt-mode", default="prompt_layout_all_en")
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--max-pixels", type=int, default=MLX_MAX_PIXELS)
