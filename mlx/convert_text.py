@@ -21,13 +21,21 @@ OUTPUT_DIR = str(_SCRIPT_DIR / "mlx_text_model")
 
 
 def main():
-    # Clean stale artifacts from previous runs
+    # 1. Validate inputs before touching any outputs
+    config_path = os.path.join(WEIGHTS_DIR, "config.json")
+    index_path = os.path.join(WEIGHTS_DIR, "model.safetensors.index.json")
+    for p in [config_path, index_path]:
+        if not os.path.exists(p):
+            print(f"Error: {p} not found. Run 'python3 tools/download_model.py' first.")
+            sys.exit(1)
+
+    # Clean stale artifacts only after confirming inputs exist
     for d in [INTERMEDIATE_DIR, OUTPUT_DIR]:
         if os.path.exists(d):
             shutil.rmtree(d)
             print(f"Removed stale {d}/")
-    # 1. Load and adapt config
-    with open(os.path.join(WEIGHTS_DIR, "config.json")) as f:
+
+    with open(config_path) as f:
         config = json.load(f)
 
     # Remove vision-specific fields
@@ -46,7 +54,6 @@ def main():
     print(f"Config written to {INTERMEDIATE_DIR}/config.json")
 
     # 2. Filter and merge safetensors (strip vision_tower.* weights)
-    index_path = os.path.join(WEIGHTS_DIR, "model.safetensors.index.json")
     with open(index_path) as f:
         index = json.load(f)
 
