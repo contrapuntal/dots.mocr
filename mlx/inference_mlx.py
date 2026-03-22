@@ -25,8 +25,11 @@ import torch
 from transformers import AutoProcessor, AutoConfig
 from qwen_vl_utils import process_vision_info
 
-WEIGHTS_DIR = "../weights/DotsMOCR"
-MLX_TEXT_MODEL = "./mlx_text_model"
+from pathlib import Path
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+WEIGHTS_DIR = str(_SCRIPT_DIR / ".." / "weights" / "DotsMOCR")
+MLX_TEXT_MODEL = str(_SCRIPT_DIR / "mlx_text_model")
 IMAGE_TOKEN_ID = 151665
 MLX_MAX_PIXELS = 8_000_000
 
@@ -142,7 +145,7 @@ def generate_with_embeddings(text_model, tokenizer, input_embeddings, input_ids,
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--image", default="../demo/demo_image1.jpg")
+    parser.add_argument("--image", default=str(_SCRIPT_DIR / ".." / "demo" / "demo_image1.jpg"))
     parser.add_argument("--prompt-mode", default="prompt_layout_all_en")
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--max-pixels", type=int, default=MLX_MAX_PIXELS)
@@ -152,7 +155,7 @@ def main():
     # which pulls in fitz/cairosvg dependencies we don't have in the mlx venv)
     import importlib.util
     spec = importlib.util.spec_from_file_location(
-        "prompts", os.path.join(WEIGHTS_DIR, "../../dots_mocr/utils/prompts.py")  # ../dots_mocr/utils/prompts.py
+        "prompts", str(_SCRIPT_DIR / ".." / "dots_mocr" / "utils" / "prompts.py")
     )
     prompts_mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(prompts_mod)

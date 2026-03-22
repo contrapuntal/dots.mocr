@@ -10,14 +10,22 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 from safetensors.torch import load_file, save_file
 
-WEIGHTS_DIR = "../weights/DotsMOCR"
-INTERMEDIATE_DIR = "./text_backbone"
-OUTPUT_DIR = "./mlx_text_model"
+# Anchor paths relative to this script, not the caller's cwd
+_SCRIPT_DIR = Path(__file__).resolve().parent
+WEIGHTS_DIR = str(_SCRIPT_DIR / ".." / "weights" / "DotsMOCR")
+INTERMEDIATE_DIR = str(_SCRIPT_DIR / "text_backbone")
+OUTPUT_DIR = str(_SCRIPT_DIR / "mlx_text_model")
 
 
 def main():
+    # Clean stale artifacts from previous runs
+    for d in [INTERMEDIATE_DIR, OUTPUT_DIR]:
+        if os.path.exists(d):
+            shutil.rmtree(d)
+            print(f"Removed stale {d}/")
     # 1. Load and adapt config
     with open(os.path.join(WEIGHTS_DIR, "config.json")) as f:
         config = json.load(f)

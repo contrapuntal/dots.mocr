@@ -25,8 +25,11 @@ from transformers import AutoModelForCausalLM, AutoProcessor, AutoConfig
 from qwen_vl_utils import process_vision_info
 from vision_tower import DotsVisionTower, VisionConfig, load_vision_weights
 
-WEIGHTS_DIR = "../weights/DotsMOCR"
-TEST_IMAGE = "../demo/demo_image1.jpg"
+from pathlib import Path
+
+_SCRIPT_DIR = Path(__file__).resolve().parent
+WEIGHTS_DIR = str(_SCRIPT_DIR / ".." / "weights" / "DotsMOCR")
+TEST_IMAGE = str(_SCRIPT_DIR / ".." / "demo" / "demo_image1.jpg")
 
 
 def get_pytorch_output():
