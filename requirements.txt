@@ -1,4 +1,4 @@
-# streamlit 
+# streamlit
 gradio
 # gradio_image_annotation
 PyMuPDF
