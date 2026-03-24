@@ -9,7 +9,7 @@ This fork adds native Apple Silicon inference via **[mlx-vlm](https://github.com
 ### Setup
 
 ```bash
-pip install git+https://github.com/Blaizzy/mlx-vlm
+pip install mlx-vlm
 ```
 
 ### Run
@@ -17,8 +17,11 @@ pip install git+https://github.com/Blaizzy/mlx-vlm
 ```python
 from mlx_vlm import load, generate
 from mlx_vlm.prompt_utils import apply_chat_template
+from transformers import Qwen2VLImageProcessor
 
 model, processor = load("rednote-hilab/dots.mocr")
+processor.image_processor = Qwen2VLImageProcessor.from_pretrained("rednote-hilab/dots.mocr")
+
 prompt = apply_chat_template(processor, model.config, "Extract the text content from this image.", num_images=1)
 result = generate(model, processor, prompt, image=["demo/demo_image1.jpg"], max_tokens=2048, verbose=True)
 print(result.text)

@@ -64,20 +64,23 @@ All 8 prompt modes smoke-tested via `demo/test_all_modes_mps.py` (SDPA + fp16, m
 Use [mlx-vlm](https://github.com/Blaizzy/mlx-vlm) for MLX inference. It loads dots.mocr weights directly — no conversion needed. See [mlx-vlm PR #749](https://github.com/Blaizzy/mlx-vlm/pull/749) for the dots_ocr model implementation.
 
 ```bash
-pip install git+https://github.com/Blaizzy/mlx-vlm
+pip install mlx-vlm
 ```
-
-**Note**: Install from git, not PyPI. The PyPI release (0.4.1) has a bug where transformers 5.3.0's fast image processor rejects `return_tensors="mlx"` ([#525](https://github.com/Blaizzy/mlx-vlm/issues/525), [#847](https://github.com/Blaizzy/mlx-vlm/issues/847)). Fixed on main via [PR #821](https://github.com/Blaizzy/mlx-vlm/pull/821) but not yet released.
 
 ```python
 from mlx_vlm import load, generate
 from mlx_vlm.prompt_utils import apply_chat_template
+from transformers import Qwen2VLImageProcessor
 
 model, processor = load("rednote-hilab/dots.mocr")
+processor.image_processor = Qwen2VLImageProcessor.from_pretrained("rednote-hilab/dots.mocr")
+
 prompt = apply_chat_template(processor, model.config, "Extract the text content from this image.", num_images=1)
 result = generate(model, processor, prompt, image=["demo/demo_image1.jpg"], max_tokens=2048)
 print(result.text)
 ```
+
+**Note**: The `Qwen2VLImageProcessor` swap is needed because mlx-vlm loads the fast image processor by default, which rejects `return_tensors="mlx"` on transformers 5.x ([#525](https://github.com/Blaizzy/mlx-vlm/issues/525)). The slow processor handles it correctly.
 
 ### MLX performance (M4 Max, 128GB)
 
