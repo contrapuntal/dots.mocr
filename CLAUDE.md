@@ -64,8 +64,10 @@ All 8 prompt modes smoke-tested via `demo/test_all_modes_mps.py` (SDPA + fp16, m
 Use [mlx-vlm](https://github.com/Blaizzy/mlx-vlm) for MLX inference. It loads dots.mocr weights directly — no conversion needed. See [mlx-vlm PR #749](https://github.com/Blaizzy/mlx-vlm/pull/749) for the dots_ocr model implementation.
 
 ```bash
-pip install mlx-vlm
+pip install git+https://github.com/Blaizzy/mlx-vlm
 ```
+
+**Note**: Install from git, not PyPI. The PyPI release (0.4.1) has a bug where transformers 5.3.0's fast image processor rejects `return_tensors="mlx"` ([#525](https://github.com/Blaizzy/mlx-vlm/issues/525), [#847](https://github.com/Blaizzy/mlx-vlm/issues/847)). Fixed on main via [PR #821](https://github.com/Blaizzy/mlx-vlm/pull/821) but not yet released.
 
 ```python
 from mlx_vlm import load, generate

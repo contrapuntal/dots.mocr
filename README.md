@@ -9,7 +9,7 @@ This fork adds native Apple Silicon inference via **[mlx-vlm](https://github.com
 ### Setup
 
 ```bash
-pip install mlx-vlm
+pip install git+https://github.com/Blaizzy/mlx-vlm
 ```
 
 ### Run
