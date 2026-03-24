@@ -71,7 +71,7 @@ pip install mlx-vlm
 from mlx_vlm import load, generate
 from mlx_vlm.prompt_utils import apply_chat_template
 
-model, processor = load("./weights/DotsMOCR", trust_remote_code=True)
+model, processor = load("rednote-hilab/dots.mocr")
 prompt = apply_chat_template(processor, model.config, "Extract the text content from this image.", num_images=1)
 result = generate(model, processor, prompt, image=["demo/demo_image1.jpg"], max_tokens=2048)
 print(result.text)

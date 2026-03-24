@@ -10,7 +10,6 @@ This fork adds native Apple Silicon inference via **[mlx-vlm](https://github.com
 
 ```bash
 pip install mlx-vlm
-python3 tools/download_model.py  # download weights to ./weights/DotsMOCR
 ```
 
 ### Run
@@ -19,7 +18,7 @@ python3 tools/download_model.py  # download weights to ./weights/DotsMOCR
 from mlx_vlm import load, generate
 from mlx_vlm.prompt_utils import apply_chat_template
 
-model, processor = load("./weights/DotsMOCR", trust_remote_code=True)
+model, processor = load("rednote-hilab/dots.mocr")
 prompt = apply_chat_template(processor, model.config, "Extract the text content from this image.", num_images=1)
 result = generate(model, processor, prompt, image=["demo/demo_image1.jpg"], max_tokens=2048, verbose=True)
 print(result.text)
