@@ -1,9 +1,5 @@
 output/
 
-# MLX generated artifacts (regenerate via: cd mlx && python3 convert_text.py)
-mlx/mlx_text_model/
-mlx/text_backbone/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
