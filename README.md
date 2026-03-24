@@ -1,47 +1,48 @@
 # Fork: Apple Silicon Support
 
-This fork adds native Apple Silicon inference via **MLX** (recommended) and **PyTorch MPS** (fallback). No CUDA required.
+This fork adds native Apple Silicon inference via **[mlx-vlm](https://github.com/Blaizzy/mlx-vlm)** (recommended) and **PyTorch MPS** (fallback). No CUDA required.
 
-## MLX Inference (Recommended)
+## MLX Inference via mlx-vlm (Recommended)
 
-**85 tok/s** on M4 Max. 5x faster than PyTorch MPS. Handles 8M+ pixel images without OOM.
+**74 tok/s** on M4 Max. 5x faster than PyTorch MPS. Handles 8M+ pixel images without OOM. Uses identical weights — no conversion needed.
 
 ### Setup
 
 ```bash
-# 1. Download model weights (from repo root)
-python3 tools/download_model.py
+pip install mlx-vlm
+python3 tools/download_model.py  # download weights to ./weights/DotsMOCR
+```
 
-# 2. Set up MLX environment
-cd mlx
-uv venv --python 3.12 .venv && source .venv/bin/activate
-uv pip install torch torchvision transformers==4.51.0 mlx mlx-lm qwen-vl-utils accelerate Pillow numpy safetensors
+### Run
 
-# 3. Convert text backbone (one-time, generates mlx_text_model/)
-python3 convert_text.py
+```python
+from mlx_vlm import load, generate
+from mlx_vlm.prompt_utils import apply_chat_template
 
-# 4. Run inference
-DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 inference_mlx.py --image ../demo/demo_image1.jpg
+model, processor = load("./weights/DotsMOCR", trust_remote_code=True)
+prompt = apply_chat_template(processor, model.config, "Extract the text content from this image.", num_images=1)
+result = generate(model, processor, prompt, image=["demo/demo_image1.jpg"], max_tokens=2048, verbose=True)
+print(result.text)
 ```
 
 ### Performance (M4 Max, 128GB)
 
-| Metric | PyTorch MPS | MLX |
-|--------|------------|-----|
-| Text generation | 15-20 tok/s | **72-88 tok/s** (5x) |
-| Vision encoder (4M px) | ~130s | **16s** (8x) |
+| Metric | PyTorch MPS | MLX (mlx-vlm) |
+|--------|------------|---------------|
+| Text generation | 15-20 tok/s | **74 tok/s** (5x) |
 | Max pixels before OOM | 4M | **8M+** |
+| Peak memory | ~15 GB | **7.5 GB** |
 
 ## PyTorch MPS Fallback
 
-If you prefer PyTorch without MLX dependencies:
+If you prefer PyTorch without MLX dependencies (included in this fork):
 
 ```bash
 source .venv/bin/activate
 DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 demo/demo_mps.py
 ```
 
-See [CLAUDE.md](CLAUDE.md) for full implementation details, limitations, and test results.
+See [CLAUDE.md](CLAUDE.md) for MPS implementation details, limitations, and test results.
 
 ---
 

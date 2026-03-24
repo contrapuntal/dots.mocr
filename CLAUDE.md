@@ -61,52 +61,33 @@ All 8 prompt modes smoke-tested via `demo/test_all_modes_mps.py` (SDPA + fp16, m
 
 ## Running on Apple Silicon (MLX) — Recommended
 
-Pure MLX inference is **5-6x faster** than PyTorch MPS and handles **8M+ pixel images** without OOM.
+Use [mlx-vlm](https://github.com/Blaizzy/mlx-vlm) for MLX inference. It loads dots.mocr weights directly — no conversion needed. See [mlx-vlm PR #749](https://github.com/Blaizzy/mlx-vlm/pull/749) for the dots_ocr model implementation.
 
 ```bash
-cd mlx
-source .venv/bin/activate  # separate venv with mlx dependencies
-DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 inference_mlx.py --image ../demo/demo_image1.jpg
+pip install mlx-vlm
 ```
 
-### MLX architecture
+```python
+from mlx_vlm import load, generate
+from mlx_vlm.prompt_utils import apply_chat_template
 
-The MLX pipeline splits the model into two independently-loaded components:
+model, processor = load("./weights/DotsMOCR", trust_remote_code=True)
+prompt = apply_chat_template(processor, model.config, "Extract the text content from this image.", num_images=1)
+result = generate(model, processor, prompt, image=["demo/demo_image1.jpg"], max_tokens=2048)
+print(result.text)
+```
 
-- **Vision tower** (`vision_tower.py`): Full port of `DotsVisionTransformer` to `mlx.nn`. Uses `mx.fast.scaled_dot_product_attention` per sub-sequence (no O(N^2) mask). Weights loaded from PyTorch safetensors via `load_vision_weights()`.
-- **Text backbone** (`mlx_text_model/`): Converted via `mlx_lm.convert` as a standard Qwen2 model. Accepts `input_embeddings` for vision token injection.
+### MLX performance (M4 Max, 128GB)
 
-Image preprocessing still uses the PyTorch `Qwen2VLImageProcessor` (CPU-only, no GPU needed).
-
-### MLX setup
-
-Located at `mlx/` with its own `uv venv` (separate from the PyTorch `.venv/`):
-- `vision_tower.py` — MLX vision tower (304 weights, validated cos_sim=1.0 vs PyTorch)
-- `inference_mlx.py` — end-to-end inference script
-- `mlx_text_model/` — converted Qwen2 text backbone (3.3GB, bfloat16)
-- `convert_text.py` — text backbone extraction/conversion script
-- `test_vision_tower.py` — parity validation (exits non-zero on failure)
-
-### MLX performance (M4 Max, 128GB, warm run)
-
-| Component | Time | Notes |
-|-----------|------|-------|
-| Vision encoder | 16s | 42-layer transformer, ~20K tokens at 4M px |
-| Text generation | 6s / 512 tokens | 85 tok/s greedy decode |
-| Max pixels | 8M+ | No OOM (was OOM at 8M on PyTorch MPS) |
-
-### MLX vs PyTorch MPS comparison
-
-| Metric | PyTorch MPS | MLX |
-|--------|------------|-----|
-| Text generation speed | 15-20 tok/s | **72-88 tok/s** (5x) |
-| Vision encoder (4M px) | ~130s total | **16s** (8x) |
+| Metric | PyTorch MPS | MLX (mlx-vlm) |
+|--------|------------|---------------|
+| Text generation | 15-20 tok/s | **74 tok/s** (5x) |
 | Max pixels before OOM | 4M | **8M+** |
-| Web parsing (25M px image) | Sparse output (4M resize) | Real output (8M resize) |
+| Peak memory | ~15 GB | **7.5 GB** |
 
-### Why CoreML was not used
+### Why not CoreML
 
-CoreML conversion (`convert_vision.py`) was attempted but failed: `torch.jit.trace` bakes dynamic tensor shapes as `aten::Int` ops that `coremltools` cannot convert to MIL. The vision tower's `grid_thw`-driven control flow (rotary embeddings, cu_seqlens construction) makes the export boundary inherently dynamic. A narrower export boundary (precomputing rotary/cu_seqlens outside the model) could work but was more effort than the pure MLX port.
+CoreML conversion was attempted but failed: `torch.jit.trace` bakes dynamic tensor shapes as `aten::Int` ops that `coremltools` cannot convert. The vision tower's `grid_thw`-driven control flow makes the export boundary inherently dynamic.
 
 ## Project structure
 
